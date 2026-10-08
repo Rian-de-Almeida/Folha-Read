@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Confira as respostas do formulário de horas extras e gere relatórios em PDF."
+    >
+    <title>Relatórios de horas extras</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./" aria-label="Relatórios de horas extras, início">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span>APSA <span class="brand-divider">/</span> Pagamentos</span>
+        </a>
+        <span class="privacy-note"><span class="privacy-dot" aria-hidden="true"></span> Processamento local no navegador</span>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <div class="page-heading">
+        <p class="eyebrow">FOLHA DE PAGAMENTO</p>
+        <h1>Relatórios de horas extras</h1>
+        <p class="page-intro">Leia a resposta do formulário, complete os dados que faltam e gere um relatório PDF.</p>
+      </div>
+
+      <section class="panel response-panel" aria-labelledby="response-title">
+        <div class="section-heading">
+          <div>
+            <span class="step-number">01</span>
+            <h2 id="response-title">Importe a resposta do formulário</h2>
+          </div>
+          <span class="section-meta">Um PDF por cliente</span>
+        </div>
+        <p class="section-description">
+          Selecione o PDF de uma resposta do cliente. Depois da extração, revise os dados e use <strong>Adicionar funcionário</strong>
+          para cadastrar quem ficou de fora ou completar manualmente as horas e o valor da hora extra.
+          O valor informado por hora extra deve já incluir os adicionais aplicáveis.
+        </p>
+        <div class="upload-controls">
+          <label class="file-picker">
+            <span class="file-picker-icon" aria-hidden="true">↑</span>
+            <span>Selecionar resposta PDF</span>
+            <input id="response-pdf-input" type="file" accept="application/pdf,.pdf">
+          </label>
+          <button id="read-response-pdf" class="button button-primary" type="button" disabled>Extrair resposta</button>
+          <button id="clear-response" class="button button-quiet" type="button" disabled>Limpar resposta</button>
+        </div>
+        <p id="response-file-name" class="file-selection" aria-live="polite">Nenhum arquivo selecionado</p>
+        <div id="response-status" class="status-message" role="status" aria-live="polite"></div>
+        <div id="response-editor" class="response-editor" hidden>
+          <div class="response-fields">
+            <label>CNPJ
+              <input id="response-cnpj" class="response-input" type="text" inputmode="numeric" autocomplete="off" maxlength="18" required>
+            </label>
+            <label>Nome fantasia
+              <input id="response-trade-name" class="response-input" type="text" required>
+            </label>
+            <label>Mês de referência
+              <input id="response-month" class="response-input" type="month" required>
+            </label>
+          </div>
+          <div class="response-employee-heading">
+            <h3>Funcionários</h3>
+            <button id="add-response-employee" class="button button-secondary" type="button">＋ Adicionar funcionário</button>
+          </div>
+          <div class="table-scroll">
+            <table class="response-table">
+              <thead>
+                <tr>
+                  <th scope="col">Funcionário</th>
+                  <th scope="col">Horas extras</th>
+                  <th scope="col">Valor da hora extra (R$)</th>
+                  <th scope="col"><span class="visually-hidden">Ações</span></th>
+                </tr>
+              </thead>
+              <tbody id="response-employees"></tbody>
+            </table>
+          </div>
+          <div class="response-export-row">
+            <p>O relatório incluirá todos os funcionários extraídos e adicionados manualmente, com o total calculado (horas extras × valor da hora extra).</p>
+            <button id="generate-response-report" class="button button-primary" type="button">Gerar relatório PDF</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="review-notice">
+        <span class="notice-icon" aria-hidden="true">!</span>
+        <div>
+          <strong>Revise antes de usar o relatório</strong>
+          <p>A extração por OCR pode interpretar incorretamente os dados. Confira o PDF original e os funcionários adicionados manualmente antes de gerar o relatório.</p>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="site-footer">
+      <span>Relatórios de horas extras</span>
+      <span>Os documentos são processados localmente; confira os dados no PDF original do formulário.</span>
+    </footer>
+  </body>
+</html>
