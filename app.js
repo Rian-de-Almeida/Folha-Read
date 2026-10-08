@@ -12,6 +12,10 @@ const responseMonth = document.querySelector("#response-month");
 const responseEmployees = document.querySelector("#response-employees");
 const addResponseEmployeeButton = document.querySelector("#add-response-employee");
 const generateResponseReportButton = document.querySelector("#generate-response-report");
+const responseReportPreview = document.querySelector("#response-report-preview");
+const responseReportPages = document.querySelector("#response-report-pages");
+const printResponseReportButton = document.querySelector("#print-response-report");
+const saveResponseReportButton = document.querySelector("#save-response-report");
 
 if (typeof pdfjsLib !== "undefined") {
   pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -29,8 +33,12 @@ const decimalFormatter = new Intl.NumberFormat("pt-BR", {
 
 let selectedResponsePdf = null;
 let isReadingResponse = false;
+let responseReportPreviewUrl = "";
+let preparedResponseReport = null;
+let responseReportRenderGeneration = 0;
 
 responsePdfInput.addEventListener("change", () => {
+  clearResponseReportPreview();
   selectedResponsePdf = responsePdfInput.files?.[0] || null;
   responseFileName.textContent = selectedResponsePdf?.name || "Nenhum arquivo selecionado";
   responseCnpj.value = "";
@@ -44,13 +52,21 @@ responsePdfInput.addEventListener("change", () => {
 });
 readResponseButton.addEventListener("click", readFormResponsePdf);
 clearResponseButton.addEventListener("click", clearFormResponse);
-addResponseEmployeeButton.addEventListener("click", () => addResponseEmployee({}, { manual: true }));
+addResponseEmployeeButton.addEventListener("click", () => {
+  invalidateResponseReportPreview();
+  addResponseEmployee({}, { manual: true });
+});
 generateResponseReportButton.addEventListener("click", generateResponseReport);
+printResponseReportButton.addEventListener("click", printResponseReport);
+saveResponseReportButton.addEventListener("click", saveResponseReport);
+responseEditor.addEventListener("input", invalidateResponseReportPreview);
 responseEmployees.addEventListener("click", (event) => {
   const removeButton = event.target.closest(".response-remove");
   if (removeButton) {
+    const hadPreview = Boolean(preparedResponseReport);
+    invalidateResponseReportPreview();
     removeButton.closest("tr").remove();
-    setResponseStatus("");
+    if (!hadPreview) setResponseStatus("");
   }
 });
 
@@ -110,6 +126,7 @@ function addResponseEmployee(values = {}, { manual = false } = {}) {
 
 function clearFormResponse() {
   if (isReadingResponse) return;
+  clearResponseReportPreview();
   selectedResponsePdf = null;
   responsePdfInput.value = "";
   responseFileName.textContent = "Nenhum arquivo selecionado";
@@ -1384,20 +1401,71 @@ function buildResponseReport(data) {
   return pdf;
 }
 
+function clearResponseReportPreview() {
+  responseReportRenderGeneration += 1;
+  preparedResponseReport = null;
+  responseReportPreview.hidden = true;
+  printResponseReportButton.disabled = true;
+  saveResponseReportButton.disabled = true;
+  responseReportPages.replaceChildren();
+  if (responseReportPreviewUrl) URL.revokeObjectURL(responseReportPreviewUrl);
+  responseReportPreviewUrl = "";
+}
+
+function invalidateResponseReportPreview() {
+  const hadPreview = Boolean(preparedResponseReport);
+  clearResponseReportPreview();
+  if (hadPreview) {
+    setResponseStatus("Os dados foram alterados. Gere uma nova prévia antes de imprimir ou salvar.", "warning");
+  }
+}
+
+async function renderResponseReportPreview(blob) {
+  const generation = ++responseReportRenderGeneration;
+  let pdf;
+  try {
+    const data = new Uint8Array(await blob.arrayBuffer());
+    pdf = await pdfjsLib.getDocument({ data }).promise;
+    if (generation !== responseReportRenderGeneration) return false;
+
+    responseReportPages.replaceChildren();
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      if (generation !== responseReportRenderGeneration) return false;
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 1.15 });
+      const pageContainer = document.createElement("div");
+      pageContainer.className = "response-report-page";
+      const pageLabel = document.createElement("p");
+      pageLabel.className = "response-report-page-label";
+      pageLabel.textContent = `Página ${pageNumber} de ${pdf.numPages}`;
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Não foi possível exibir uma página da prévia.");
+      await page.render({ canvasContext: context, viewport }).promise;
+      if (generation !== responseReportRenderGeneration) return false;
+      pageContainer.append(pageLabel, canvas);
+      responseReportPages.append(pageContainer);
+      page.cleanup();
+    }
+    printResponseReportButton.disabled = false;
+    return true;
+  } catch (error) {
+    if (generation !== responseReportRenderGeneration) return false;
+    const message = error instanceof Error ? error.message : String(error);
+    saveResponseReportButton.disabled = true;
+    setResponseStatus(`Não foi possível exibir a prévia do relatório PDF: ${message}`, "error");
+    return false;
+  } finally {
+    if (pdf) await pdf.destroy();
+  }
+}
+
 async function generateResponseReport() {
   const data = getResponseReportData();
   if (data.errors.length) {
     setResponseStatus(`Corrija os dados antes de gerar o relatório: ${data.errors.join("; ")}.`, "error");
-    return;
-  }
-  if (
-    location.protocol !== "http:" ||
-    (location.hostname !== "127.0.0.1" && location.hostname !== "localhost")
-  ) {
-    setResponseStatus(
-      "Para salvar o relatório em destino/, inicie o servidor local com python server.py e abra http://127.0.0.1:8765.",
-      "error",
-    );
     return;
   }
 
@@ -1406,25 +1474,72 @@ async function generateResponseReport() {
     const pdf = buildResponseReport(data);
     const fileName = `relatorio-horas-extras-${data.cnpj}-${data.month}-${Date.now()}.pdf`;
     const blob = pdf.output("blob");
+    clearResponseReportPreview();
+    preparedResponseReport = { blob, fileName, cnpj: data.cnpj };
+    responseReportPreviewUrl = URL.createObjectURL(blob);
+    responseReportPreview.hidden = false;
+    saveResponseReportButton.disabled = !canSaveResponseReport();
+    responseReportPreview.scrollIntoView({ behavior: "smooth", block: "start" });
+    setResponseStatus("Gerando a prévia do PDF…");
+    const previewRendered = await renderResponseReportPreview(blob);
+    if (previewRendered && preparedResponseReport) {
+      setResponseStatus("Prévia pronta. Confira o relatório antes de imprimir ou salvar.", "success");
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    setResponseStatus(`Não foi possível criar a prévia do relatório PDF: ${message}`, "error");
+  } finally {
+    generateResponseReportButton.disabled = false;
+  }
+}
+
+function canSaveResponseReport() {
+  return (
+    location.protocol === "http:" &&
+    (location.hostname === "127.0.0.1" || location.hostname === "localhost")
+  );
+}
+
+function printResponseReport() {
+  if (!preparedResponseReport || printResponseReportButton.disabled) return;
+  const printWindow = window.open(responseReportPreviewUrl, "_blank");
+  if (!printWindow) {
+    setResponseStatus("O navegador bloqueou a nova aba do PDF. Permita pop-ups para abrir e imprimir o relatório.", "error");
+  }
+}
+
+async function saveResponseReport() {
+  if (!preparedResponseReport) return;
+  const report = preparedResponseReport;
+  if (!canSaveResponseReport()) {
+    setResponseStatus(
+      "Para salvar o relatório em destino/, abra a aplicação local em http://127.0.0.1:8765. É possível imprimir a prévia sem salvar no servidor.",
+      "error",
+    );
+    return;
+  }
+
+  saveResponseReportButton.disabled = true;
+  try {
     const response = await fetch("/api/report", {
       method: "POST",
       headers: {
         "Content-Type": "application/pdf",
-        "X-Filename": fileName,
+        "X-Filename": report.fileName,
       },
-      body: blob,
+      body: report.blob,
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "O servidor recusou o relatório.");
     setResponseStatus(
-      `Relatório PDF salvo em ${result.file}.${isValidCnpj(data.cnpj) ? "" : " Atenção: confira os dígitos verificadores do CNPJ."}`,
-      isValidCnpj(data.cnpj) ? "success" : "warning",
+      `Relatório PDF salvo em ${result.file}.${isValidCnpj(report.cnpj) ? "" : " Atenção: confira os dígitos verificadores do CNPJ."}`,
+      isValidCnpj(report.cnpj) ? "success" : "warning",
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    setResponseStatus(`Não foi possível gerar o relatório PDF: ${message}`, "error");
+    setResponseStatus(`Não foi possível salvar o relatório PDF: ${message}`, "error");
   } finally {
-    generateResponseReportButton.disabled = false;
+    saveResponseReportButton.disabled = !preparedResponseReport || !canSaveResponseReport();
   }
 }
 

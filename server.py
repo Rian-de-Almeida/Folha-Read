@@ -21,8 +21,10 @@ REPORT_NAME = re.compile(
 STATIC_FILES = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/index.html": ("index.html", "text/html; charset=utf-8"),
+    "/form.html": ("form.html", "text/html; charset=utf-8"),
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/form.js": ("form.js", "text/javascript; charset=utf-8"),
 }
 
 

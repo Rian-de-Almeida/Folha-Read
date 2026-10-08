@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Preencha o formulário de horas extras da APSA e exporte a resposta em PDF."
+    >
+    <title>Formulário do cliente | APSA</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+    <script src="form.js" defer></script>
+  </head>
+  <body class="client-form-page">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./" aria-label="APSA Pagamentos, início">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span>APSA <span class="brand-divider">/</span> Pagamentos</span>
+        </a>
+        <div class="header-actions">
+          <a class="header-link" href="./">Voltar aos relatórios</a>
+          <span class="privacy-note"><span class="privacy-dot" aria-hidden="true"></span> Resposta não armazenada</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-shell client-form-shell">
+      <div class="page-heading screen-only">
+        <p class="eyebrow">FOLHA DE PAGAMENTO</p>
+        <h1>Informações de horas extras</h1>
+        <p class="page-intro">Preencha os dados da empresa e dos funcionários para gerar a resposta em PDF.</p>
+      </div>
+
+      <form id="client-response-form" class="screen-only" novalidate>
+        <section class="panel form-panel" aria-labelledby="company-title">
+          <div class="section-heading">
+            <div>
+              <span class="step-number">01</span>
+              <h2 id="company-title">Dados da empresa</h2>
+            </div>
+            <span class="section-meta">Consulta pelo CNPJ</span>
+          </div>
+          <p class="section-description">Informe o CNPJ para buscar os dados cadastrais disponíveis. Confira e corrija o nome fantasia se necessário.</p>
+
+          <div class="client-form-grid">
+            <div class="cnpj-entry">
+              <label for="client-cnpj">CNPJ <span aria-hidden="true">*</span></label>
+              <div class="cnpj-control">
+                <input
+                  id="client-cnpj"
+                  name="cnpj"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="organization"
+                  placeholder="00.000.000/0000-00"
+                  maxlength="18"
+                  aria-describedby="cnpj-help cnpj-status"
+                  required
+                >
+                <button id="lookup-cnpj" class="button button-secondary" type="button">Buscar dados</button>
+              </div>
+              <p id="cnpj-help" class="form-help">A consulta envia o CNPJ à BrasilAPI. Os dados preenchidos não são armazenados por este servidor.</p>
+              <p id="cnpj-status" class="form-status" role="status" aria-live="polite"></p>
+            </div>
+            <label for="client-trade-name">Nome fantasia <span aria-hidden="true">*</span>
+              <input id="client-trade-name" name="tradeName" class="response-input" type="text" autocomplete="organization" required>
+            </label>
+            <label for="client-month">Mês de referência <span aria-hidden="true">*</span>
+              <input id="client-month" name="month" class="response-input" type="month" required>
+            </label>
+          </div>
+
+          <dl id="company-details" class="company-details" hidden>
+            <div><dt>Razão social</dt><dd data-company-field="legalName"></dd></div>
+            <div><dt>Situação cadastral</dt><dd data-company-field="status"></dd></div>
+            <div><dt>Endereço</dt><dd data-company-field="address"></dd></div>
+            <div><dt>Atividade principal</dt><dd data-company-field="activity"></dd></div>
+            <div><dt>Contato cadastrado</dt><dd data-company-field="contact"></dd></div>
+          </dl>
+        </section>
+
+        <section class="panel form-panel" aria-labelledby="employees-title">
+          <div class="section-heading">
+            <div>
+              <span class="step-number">02</span>
+              <h2 id="employees-title">Funcionários</h2>
+            </div>
+            <button id="add-client-employee" class="button button-secondary" type="button">＋ Adicionar funcionário</button>
+          </div>
+          <p class="section-description">Informe as horas extras e o valor final por hora, já incluindo os adicionais aplicáveis.</p>
+          <div id="client-employees" class="client-employees"></div>
+          <p id="employee-status" class="form-status" role="status" aria-live="polite"></p>
+        </section>
+
+        <div class="client-form-actions">
+          <p>A prévia permite conferir o formulário e a planilha antes de baixar. Os dados ficam neste navegador e não são salvos no servidor.</p>
+          <div class="client-form-submit">
+            <p id="form-status" class="form-status" role="alert" aria-live="assertive"></p>
+            <button id="export-response" class="button button-primary" type="submit">Pré-visualizar arquivos</button>
+          </div>
+        </div>
+      </form>
+
+      <section id="preview-heading" class="preview-intro screen-only" hidden aria-labelledby="preview-title">
+        <p class="eyebrow">CONFERÊNCIA</p>
+        <h2 id="preview-title">Confira os arquivos antes de baixar</h2>
+        <p>Revise o formulário e a planilha abaixo. Se precisar corrigir algo, volte ao formulário e gere uma nova prévia.</p>
+      </section>
+
+      <section id="print-response" class="print-response" aria-label="Prévia da resposta do formulário">
+        <div class="print-brand">APSA <span>/</span> Folha de pagamento</div>
+        <h1>Informações de horas extras</h1>
+        <p class="print-answer-line"><strong>CNPJ:</strong> <span data-print-field="cnpj"></span></p>
+        <p class="print-answer-line"><strong>Razão Social / Nome Fantasia:</strong> <span data-print-field="tradeName"></span></p>
+        <p class="print-answer-line"><strong>Mês de referência:</strong> <span data-print-field="month"></span></p>
+        <div class="print-employees">
+          <strong>Funcionários</strong>
+          <div id="print-employee-rows"></div>
+        </div>
+        <p class="print-disclaimer">Confira as informações antes de enviar esta resposta à APSA.</p>
+      </section>
+
+      <section id="spreadsheet-preview" class="spreadsheet-preview screen-only" hidden aria-labelledby="spreadsheet-preview-title">
+        <div class="section-heading">
+          <div>
+            <span class="step-number">XLSX</span>
+            <h2 id="spreadsheet-preview-title">Prévia da planilha</h2>
+          </div>
+          <span class="section-meta">Aba: Horas extras</span>
+        </div>
+        <div class="spreadsheet-company">
+          <div><span>CNPJ</span><strong id="preview-cnpj"></strong></div>
+          <div><span>Nome fantasia</span><strong id="preview-trade-name"></strong></div>
+          <div><span>Mês de referência</span><strong id="preview-month"></strong></div>
+        </div>
+        <div class="table-scroll spreadsheet-table-scroll">
+          <table class="spreadsheet-table">
+            <thead>
+              <tr>
+                <th scope="col">Funcionário</th>
+                <th scope="col">Horas extras trabalhadas</th>
+                <th scope="col">Valor da hora extra (R$)</th>
+                <th scope="col">Total (R$)</th>
+              </tr>
+            </thead>
+            <tbody id="preview-spreadsheet-employees"></tbody>
+            <tfoot id="preview-spreadsheet-total"></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <div id="preview-actions" class="client-preview-actions screen-only" hidden>
+        <p>Os arquivos só serão gerados quando você escolher uma das opções abaixo.</p>
+        <div>
+          <button id="download-response-pdf" class="button button-secondary" type="button">Baixar formulário em PDF</button>
+          <button id="download-response-workbook" class="button button-primary" type="button">Baixar planilha Excel</button>
+        </div>
+        <p id="download-status" class="form-status" role="status" aria-live="polite"></p>
+      </div>
+    </main>
+
+    <footer class="site-footer screen-only">
+      <span>APSA / Pagamentos</span>
+      <span>Os dados do CNPJ são consultados em uma base pública.</span>
+    </footer>
+  </body>
+</html>

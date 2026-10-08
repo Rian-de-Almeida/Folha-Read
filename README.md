@@ -1,21 +1,23 @@
 # Relatórios APSA
 
-Aplicação local para ler uma resposta do Google Forms em PDF, revisar ou completar os dados dos funcionários e gerar um relatório PDF.
+Aplicação local para preencher formulários de horas extras, pré-visualizar e baixar as respostas em PDF ou planilha Excel, além de ler respostas em PDF, revisar os dados e gerar um relatório.
 
 ## Como usar
 
 1. Inicie o servidor na pasta do projeto com `python server.py` (ou `py server.py` no Windows).
 2. Abra `http://127.0.0.1:8765` em um navegador moderno com acesso à internet.
-3. Selecione o PDF da resposta de um cliente e clique em **Extrair resposta**.
-4. Confira o CNPJ, nome fantasia, mês, funcionários, horas extras e valor unitário da hora extra. A leitura automática pode precisar de correções.
-5. Use **Adicionar funcionário** para cadastrar qualquer funcionário que ficou de fora. Preencha o nome, as horas extras e o valor unitário da hora extra.
-6. Clique em **Gerar relatório PDF**. O servidor salva o relatório em `destino/`. A exportação exige abrir a aplicação pelo endereço local; abrir `index.html` diretamente não salva o arquivo na pasta do projeto.
+3. Para criar uma resposta, abra **Formulário do cliente** ou `http://127.0.0.1:8765/form.html`. Informe o CNPJ para consultar os dados públicos da empresa, complete o nome fantasia, o mês e os funcionários e clique em **Pré-visualizar arquivos**.
+4. Confira a prévia do formulário PDF e da planilha Excel. Baixe apenas o arquivo desejado; para o PDF, escolha **Salvar como PDF** na janela de impressão.
+5. Na página principal, selecione o PDF respondido e clique em **Extrair resposta**.
+6. Confira o CNPJ, nome fantasia, mês, funcionários, horas extras e valor unitário da hora extra. A leitura automática pode precisar de correções.
+7. Use **Adicionar funcionário** para cadastrar qualquer funcionário que ficou de fora. Preencha o nome, as horas extras e o valor unitário da hora extra.
+8. Clique em **Pré-visualizar relatório PDF** e confira o arquivo na própria página antes de imprimir. Use **Abrir PDF para imprimir** e, na nova aba, escolha a opção de impressão do navegador. Use **Salvar relatório em destino/** para guardar uma cópia no projeto. O salvamento na pasta exige abrir a aplicação pelo endereço local; abrir `index.html` diretamente permite pré-visualizar e imprimir, mas não salvar no servidor.
 
 ## Formato esperado no Google Forms
 
 O modelo `modelo_resposta_formulario.pdf` incluído no projeto usa uma tabela com as colunas **Nome do Funcionário**, **Horas Extras Trabalhadas** e **Valor da Hora Extra (R$)**. A aplicação lê as linhas preenchidas dessa tabela, converte horas no formato `12h 30m` para horas decimais e ignora linhas de exemplo/placeholders. No próprio modelo, CNPJ, nome fantasia e mês são campos de exemplo a preencher; se estiverem vazios, complete-os manualmente após a extração. Um CNPJ com 14 dígitos é preservado para conferência mesmo que seus dígitos verificadores não confiram; a aplicação exibe um aviso, mas não corrige nem descarta o número.
 
-Para respostas do Google Forms organizadas como perguntas e respostas, use estes títulos:
+O formulário personalizado em `form.html` gera um PDF com esses mesmos campos e pode ser usado no fluxo acima. Para respostas do Google Forms organizadas como perguntas e respostas, use estes títulos:
 
 - `CNPJ`
 - `Nome fantasia`
@@ -26,10 +28,10 @@ No campo de resposta longa **Funcionários**, informe um funcionário por linha 
 
 ## Relatório
 
-O relatório gerado é um PDF novo; não inclui nem modifica a resposta original do Forms ou uma folha de ponto. Ele contém o CNPJ, nome fantasia, mês de referência, cada funcionário, horas extras, valor unitário da hora extra e total calculado por funcionário (horas × valor unitário). A conferência humana continua necessária antes de usar os dados para pagamento.
+O relatório gerado é um PDF novo; não inclui nem modifica a resposta original do Forms ou uma folha de ponto. Ele contém o CNPJ, nome fantasia, mês de referência, cada funcionário, horas extras, valor unitário da hora extra e total calculado por funcionário (horas × valor unitário). A página principal exibe uma prévia do PDF para conferência e impressão antes de salvar uma cópia no servidor. A conferência humana continua necessária antes de usar os dados para pagamento.
 
 ## Privacidade e limitações
 
-PDF.js, Tesseract.js e jsPDF são carregados de CDNs públicos, portanto é necessária conexão à internet. PDFs com texto embutido são extraídos diretamente; PDFs digitalizados usam OCR em português no navegador. Os documentos não são enviados a um modelo de IA nem ao servidor local para leitura. O servidor atende somente em `127.0.0.1` e recebe o PDF final para salvá-lo em `destino/`.
+PDF.js, Tesseract.js, jsPDF e SheetJS são carregados de CDNs públicos, portanto é necessária conexão à internet. A busca cadastral consulta `https://brasilapi.com.br/api/cnpj/v1/` e requer internet; o CNPJ informado é enviado a esse serviço para a consulta. PDFs com texto embutido são extraídos diretamente; PDFs digitalizados usam OCR em português no navegador. Os documentos não são enviados a um modelo de IA nem ao servidor local para leitura. O servidor atende somente em `127.0.0.1` e recebe o PDF final para salvá-lo em `destino/`; o formulário não salva as respostas preenchidas no servidor. A planilha Excel é gerada localmente no navegador a partir dos mesmos dados exibidos na prévia.
 
 O OCR pode interpretar incorretamente CNPJ, nomes, horas ou valores. Sempre revise os campos com o PDF do Forms antes de gerar o relatório. Os relatórios contêm dados pessoais e devem ficar em local de acesso restrito; não inclua documentos reais no repositório Git.
