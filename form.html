@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
       name="description"
-      content="Preencha o formulário de horas extras da APSA e exporte a resposta em PDF."
+      content="Preencha o formulário de horas extras e exporte a resposta em PDF."
     >
-    <title>Formulário do cliente | APSA</title>
+    <title>Formulário do cliente | RN</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
     <script src="form.js" defer></script>
@@ -15,9 +15,9 @@
   <body class="client-form-page">
     <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="./" aria-label="APSA Pagamentos, início">
+        <a class="brand" href="./" aria-label="RN Pagamentos, início">
           <span class="brand-mark" aria-hidden="true">A</span>
-          <span>APSA <span class="brand-divider">/</span> Pagamentos</span>
+          <span>RN <span class="brand-divider">/</span> Pagamentos</span>
         </a>
         <div class="header-actions">
           <a class="header-link" href="./">Voltar aos relatórios</a>
@@ -110,7 +110,7 @@
       </section>
 
       <section id="print-response" class="print-response" aria-label="Prévia da resposta do formulário">
-        <div class="print-brand">APSA <span>/</span> Folha de pagamento</div>
+        <div class="print-brand">RN <span>/</span> Folha de pagamento</div>
         <h1>Informações de horas extras</h1>
         <p class="print-answer-line"><strong>CNPJ:</strong> <span data-print-field="cnpj"></span></p>
         <p class="print-answer-line"><strong>Razão Social / Nome Fantasia:</strong> <span data-print-field="tradeName"></span></p>
@@ -119,7 +119,7 @@
           <strong>Funcionários</strong>
           <div id="print-employee-rows"></div>
         </div>
-        <p class="print-disclaimer">Confira as informações antes de enviar esta resposta à APSA.</p>
+        <p class="print-disclaimer">Confira as informações antes de enviar esta resposta à RN.</p>
       </section>
 
       <section id="spreadsheet-preview" class="spreadsheet-preview screen-only" hidden aria-labelledby="spreadsheet-preview-title">
@@ -162,7 +162,7 @@
     </main>
 
     <footer class="site-footer screen-only">
-      <span>APSA / Pagamentos</span>
+      <span>Rn / Pagamentos</span>
       <span>Os dados do CNPJ são consultados em uma base pública.</span>
     </footer>
   </body>
