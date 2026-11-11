@@ -132,7 +132,7 @@ def main() -> None:
     DESTINATION.mkdir(parents=True, exist_ok=True)
     address = ("127.0.0.1", 8765)
     server = ThreadingHTTPServer(address, LocalAppHandler)
-    print("Folha APSA disponível em http://127.0.0.1:8765")
+    print("Folha disponível em http://127.0.0.1:8765")
     print(f"As planilhas serão salvas em {DESTINATION}")
     try:
         server.serve_forever()
