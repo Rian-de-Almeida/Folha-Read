@@ -1,4 +1,4 @@
-# Relatórios APSA
+# Relatórios
 
 Aplicação local para preencher formulários de horas extras, pré-visualizar e baixar as respostas em PDF ou planilha Excel, além de ler respostas em PDF, revisar os dados e gerar um relatório.
 
