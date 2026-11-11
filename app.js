@@ -1395,7 +1395,7 @@ function buildResponseReport(data) {
     pdf.setPage(pageNumber);
     pdf.setFontSize(8);
     pdf.setTextColor(130, 145, 140);
-    pdf.text(`APSA · ${monthLabel}`, margin, pageHeight - 10);
+    pdf.text(`RN · ${monthLabel}`, margin, pageHeight - 10);
     pdf.text(`${pageNumber}/${pageCount}`, pageWidth - margin, pageHeight - 10, { align: "right" });
   }
   return pdf;
@@ -1837,7 +1837,7 @@ async function exportWorkbook() {
   workbook.Props = {
     Title: "Conferência de horas extras",
     Subject: "Lançamentos e resumo de pagamentos de horas extras",
-    Author: "APSA",
+    Author: "RN",
   };
   const now = new Date();
   const pad = (value, digits = 2) => String(value).padStart(digits, "0");
