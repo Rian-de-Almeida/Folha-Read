@@ -1,4 +1,4 @@
-"""Serve the local APSA app and save generated PDF reports in the project folder."""
+"""Serve the local RN app and save generated PDF reports in the project folder."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ STATIC_FILES = {
 
 
 class LocalAppHandler(BaseHTTPRequestHandler):
-    server_version = "FolhaAPSA/1.0"
+    server_version = "FolhaRN/1.0"
 
     def do_GET(self) -> None:
         path = urlsplit(self.path).path
