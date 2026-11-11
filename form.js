@@ -427,7 +427,7 @@ downloadWorkbookButton.addEventListener("click", () => {
   workbook.Props = {
     Title: "Horas extras",
     Subject: "Dados informados pelo cliente",
-    Author: "APSA",
+    Author: "Rn",
   };
   const fileName = `horas-extras-${preparedResponse.cnpj}-${preparedResponse.month}.xlsx`;
   try {
